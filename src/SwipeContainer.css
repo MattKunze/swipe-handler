@@ -1,0 +1,10 @@
+.swipe-container {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-grow: 1;
+}
+
+.swipe-container > .transitioning {
+  transition: left .2s ease;
+}

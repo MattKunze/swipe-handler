@@ -1,0 +1,24 @@
+.App {
+  text-align: center;
+}
+
+.App-header {
+  background-color: #222;
+  padding: 20px;
+  color: white;
+}
+
+.App-header > a {
+  margin: 0 2em;
+  color: #eee;
+}
+.App-header > span {
+  color: #ccc;
+}
+
+.App-container {
+  display: flex;
+  margin: 10px auto;
+  width: 300px;
+  height: 300px;
+}
