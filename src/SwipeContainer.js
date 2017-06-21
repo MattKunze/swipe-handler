@@ -51,6 +51,13 @@ class SwipeContainer extends Component {
     }
   }
   componentDidUpdate(prevProps, prevState) {
+    const { _currentContent, _cloneContent } = this
+
+    // keep scroll position in sync
+    if (_currentContent && _cloneContent) {
+      _cloneContent.firstChild.scrollTop = _currentContent.firstChild.scrollTop
+    }
+
     const { contentWidth } = this.state
     let targetCurrentLeft, targetCloneLeft
     if (this.state.implicitPrevProps && !prevState.implicitPrevProps) {
@@ -63,7 +70,6 @@ class SwipeContainer extends Component {
       return
     }
 
-    const { _currentContent, _cloneContent } = this
     setTimeout(() => {
       _currentContent.style.left = `${targetCurrentLeft}px`
       _currentContent.classList.add('transitioning')
@@ -102,7 +108,6 @@ class SwipeContainer extends Component {
     if (panOffset !== null) {
       const style = {
         position: 'absolute',
-        display: 'flex',
         width: `${contentWidth}px`,
         height: `${contentHeight}px`
       }
@@ -112,6 +117,7 @@ class SwipeContainer extends Component {
       const results = [
         <div
           key="current"
+          className="swipe-content"
           ref={ref => (this._currentContent = ref)}
           style={Object.assign({ left: `${panOffset}px` }, style)}
         >
@@ -126,6 +132,7 @@ class SwipeContainer extends Component {
         results.push(
           <div
             key="clone"
+            className="swipe-content"
             ref={ref => (this._cloneContent = ref)}
             style={Object.assign({ left: `${cloneLeft}px` }, style)}
           >
@@ -136,16 +143,30 @@ class SwipeContainer extends Component {
 
       return results
     } else {
-      return React.createElement(
-        this.props.contentComponent,
-        this.props.currentProps
+      return (
+        <div key="current" className="swipe-content">
+          {React.createElement(
+            this.props.contentComponent,
+            this.props.currentProps
+          )}
+        </div>
       )
     }
   }
   onPan(ev) {
+    // ignore pan events generated on Android that originate from pointercancel
+    if (ev.srcEvent.type === 'pointercancel' || !this.state.contentWidth) {
+      return
+    }
+
     this.setState({ panOffset: ev.deltaX })
   }
   onPanStart(ev) {
+    if (ev.srcEvent.type === 'pointercancel') {
+      // this shouldn't happen anymore after fixing events in Hammer.js
+      console.error('got onPanStart from cancel event!')
+      return
+    }
     const bounds = ReactDOM.findDOMNode(this).getBoundingClientRect()
     this.setState({
       contentWidth: bounds.width,
@@ -155,6 +176,10 @@ class SwipeContainer extends Component {
   onPanEnd(ev) {
     const { contentWidth } = this.state
     const { _currentContent, _cloneContent } = this
+    if (!_currentContent) {
+      console.error('got onPanStart but we never started panning!')
+      return
+    }
 
     let targetCurrentLeft, targetCloneLeft
     if (
@@ -187,14 +212,21 @@ class SwipeContainer extends Component {
     }
   }
   onTransitionEnd(ev) {
-    if (this._triggerOnSwiped) {
-      if (this.state.panOffset < 0) {
-        this.props.onSwipedNext()
-      } else if (this.state.panOffset > 0) {
-        this.props.onSwipedPrev()
+    const { _currentContent } = this
+    if (
+      _currentContent &&
+      _currentContent.classList.contains('transitioning')
+    ) {
+      _currentContent.classList.remove('transitioning')
+      if (this._triggerOnSwiped) {
+        if (this.state.panOffset < 0) {
+          this.props.onSwipedNext()
+        } else if (this.state.panOffset > 0) {
+          this.props.onSwipedPrev()
+        }
       }
+      this.resetEverything()
     }
-    this.resetEverything()
   }
   resetEverything() {
     this.setState(getInitialState())

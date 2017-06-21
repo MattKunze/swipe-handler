@@ -69,14 +69,26 @@ class App extends Component {
   }
 }
 
+const gradient = Array.from(new Array(10)).map((t, index) => index / 10 + 0.05)
 function Badge(props) {
-  const style = {
+  const badgeStyle = {
     backgroundColor: props.color,
-    flexGrow: 1
-    // width: '100%',
-    // height: '100%'
+    flexGrow: 1,
+    overflowY: 'auto',
+    touchAction: 'pan-y'
   }
-  return <div style={style}>{props.color}</div>
+  return (
+    <div style={badgeStyle}>
+      <h3>{props.color}</h3>
+      <input type="text" />
+      {gradient.map((opacity, index) =>
+        <div
+          key={index}
+          style={{ opacity, backgroundColor: 'black', height: '50px' }}
+        />
+      )}
+    </div>
+  )
 }
 
 export default App
