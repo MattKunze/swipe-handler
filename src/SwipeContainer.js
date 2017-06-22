@@ -155,7 +155,11 @@ class SwipeContainer extends Component {
   }
   onPan(ev) {
     // ignore pan events generated on Android that originate from pointercancel
-    if (ev.srcEvent.type === 'pointercancel' || !this.state.contentWidth) {
+    if (ev.srcEvent.type === 'pointercancel') {
+      console.error('got onPan from cancel event!')
+      return
+    } else if (!this.state.contentWidth) {
+      console.error('got onPan without valid start', ev)
       return
     }
 
@@ -167,6 +171,7 @@ class SwipeContainer extends Component {
       console.error('got onPanStart from cancel event!')
       return
     }
+    console.warn('onPanStart', ev)
     const bounds = ReactDOM.findDOMNode(this).getBoundingClientRect()
     this.setState({
       contentWidth: bounds.width,
@@ -180,6 +185,7 @@ class SwipeContainer extends Component {
       console.error('got onPanStart but we never started panning!')
       return
     }
+    console.warn('onPanEnd', ev)
 
     let targetCurrentLeft, targetCloneLeft
     if (
